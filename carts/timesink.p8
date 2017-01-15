@@ -6,14 +6,30 @@ logoradius = 32
 logocentrex = 64
 logocentrey = 48
 animationframe=0
+
+game = {}
+
+function _init()
+    game._update = _update_logo
+    game._draw = _draw_logo
+end
+
 function _update()
+    game._update()
+end
+
+function _draw() 
+    game._draw()
+end
+
+function _update_logo()
     maxframe=60 -- 30fps * 2 seconds
     if animationframe < maxframe then
         animationframe = animationframe+1
     end
 end
 
-function _draw()
+function _draw_logo()
     cls()
     circfill(64,logocentrey, logoradius, 7)
     circfill(64,logocentrey, logoradius-4, 0)
