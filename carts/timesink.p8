@@ -1,19 +1,44 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
+
+logoradius = 32
+logocentrey = 48
+animationframe=0
+function _update()
+    maxframe=60 -- 30fps * 2 seconds
+    if animationframe < maxframe then
+        animationframe = animationframe+1
+    end
+end
+
 function _draw()
     cls()
-    circfill(64,48, 32, 7)
-    circfill(64,48, 28, 0)
-    line(58, 28, 64, 48, 7)
-    line(59, 28, 65, 48, 7)
-    line(84, 40, 64, 48, 7)
-    line(84, 41, 64, 49, 7)
+    circfill(64,logocentrey, logoradius, 7)
+    circfill(64,logocentrey, logoradius-4, 0)
+    line(58, 28, 64, logocentrey, 7)
+    line(59, 28, 65, logocentrey, 7)
+    line(84, 40, 64, logocentrey, 7)
+    line(84, 41, 64, logocentrey+1, 7)
     -- TODO little triangles at the 4 points
 
-    
+    for i=64-logoradius,64+logoradius do
+        t=animationframe / 1.5
+        curve=7 - animationframe / 20
+        waveheight=16-animationframe/6
+        y=logocentrey+waveheight+sin((i+t)/70)*curve
+        for j=y, y+logoradius do
+            d = sqrt((i-64)^2+(j-logocentrey)^2)
+            if d < logoradius then
+                pset(i, j, 7)
+            end
+        end
+    end
 
-    print("TIME SINK LABS", 34, 96, 7)
+    print("TIME SINK LABS", 37, 130-animationframe*0.6, 7)
+    
+    print(animationframe, 0, 0, 11)
+    print(waveheight , 120, 0, 11)
 end
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
