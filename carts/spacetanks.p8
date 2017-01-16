@@ -1,7 +1,35 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
--- empty template file
+
+game = {}
+title_drawn = false
+
+function _init()
+    game._update = update_title
+    game._draw = draw_title
+end
+
+function _update()
+    game._update()
+end
+
+function _draw()
+    game._draw()
+end
+
+function update_title()
+end
+
+function draw_title()
+    if title_drawn then
+        return
+    end
+    cls()
+    sspr(0, 64, 128, 128, 0, 24)
+    title_drawn = true
+end
+
 __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000007000007000000000700000700000000070000070000000000000000000000000000000000000000000000000000000000000
