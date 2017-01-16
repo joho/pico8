@@ -3,11 +3,29 @@ version 8
 __lua__
 
 game = {}
-title_drawn = false
+
+animationframe=0
+
+logoradius = 32
+logocentrex = 64
+logocentrey = 48
+
+enemypaths = {
+  {{-1, -1}, {-2, 0}, {-1, 1}, {-1, 0}},
+  {{-1, -1}, {0, 0}, {-1, -1}, {-2, 0}},
+  {{0, 2}, {-1, 1}, {-1, 2}, {-1, 0}},
+  {{-1, 0}, {0, 0}, {-3, 0}, {0, 0}},
+  {{-1, -2}, {0, -1}, {-1, -1}, {-2, 0}},
+  {{0, -2}, {-1, 0}, {0, -2}, {-2, 0}},
+  {{-1, 1}, {-1, 1}, {-1, 1}, {-1, 1}},
+  {{1, -1}, {2, 0}, {3, 0}, {1, 1}},
+}
+
+score = 0
 
 function _init()
-    game._update = update_title
-    game._draw = draw_title
+    game._update = update_logo
+    game._draw = draw_logo
 end
 
 function _update()
@@ -18,16 +36,71 @@ function _draw()
     game._draw()
 end
 
+function update_logo()
+    animationframe = animationframe+1
+    
+    if animationframe == 90 then
+        game._update = update_title
+        game._draw = draw_title
+    end
+end
+
+function draw_logo()
+    maxframe=60 -- 30fps * 2 seconds
+    logo_animation_frame = animationframe
+    if logo_animation_frame > maxframe then
+        logo_animation_frame = maxframe
+    end
+
+    cls()
+    circfill(64,logocentrey, logoradius, 7)
+    circfill(64,logocentrey, logoradius-4, 0)
+    line(58, 28, logocentrex, logocentrey, 7)
+    line(59, 28, logocentrex+1, logocentrey, 7)
+    line(84, 40, logocentrex, logocentrey, 7)
+    line(84, 41, logocentrex, logocentrey+1, 7)
+    -- TODO little triangles at the 4 points
+
+    for i=logocentrex-logoradius,logocentrex+logoradius do
+        t=logo_animation_frame / 1.5
+        curve=7 - logo_animation_frame / 20
+        waveheight=16-logo_animation_frame/6
+        y=logocentrey+waveheight+sin((i+t)/70)*curve
+        for j=y, y+logoradius do
+            d = sqrt((i-logocentrex)^2+(j-logocentrey)^2)
+            if d < logoradius then
+                pset(i, j, 7)
+            end
+        end
+    end
+
+    print("TIME SINK LABS", 37, 130-logo_animation_frame*0.6, 7)
+end
+
 function update_title()
+    animationframe = animationframe+1
+
+    if btnp(4) or btnp(5) then
+        game._update = update_game
+        game._draw = draw_game
+
+        animationframe = 0
+        score = 0
+    end
 end
 
 function draw_title()
-    if title_drawn then
-        return
-    end
     cls()
     sspr(0, 64, 128, 128, 0, 24)
-    title_drawn = true
+    if animationframe % 10 != 0 then
+        print("PRESS ACTION", 40, 96, 7)
+    end
+end
+
+function update_game()
+end
+
+function draw_game()
 end
 
 __gfx__
