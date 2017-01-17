@@ -21,6 +21,7 @@ enemypaths = {
   {{1, -1}, {2, 0}, {3, 0}, {1, 1}},
 }
 
+
 score = 0
 
 function _init()
@@ -98,9 +99,71 @@ function draw_title()
 end
 
 function update_game()
+    animationframe += 1
+    if animationframe >= 30 then
+        animationframe = 0
+    end
+
+    if btn(0) then player.x -= 1 end
+    if btn(1) then player.x += 1 end
+    if btn(2) then player.y -= 1 end
+    if btn(3) then player.y += 1 end
+    
+    if player.x < 1 then player.x = 1 end
+    if player.y < 1 then player.y = 1 end
+    if player.x > 127 then player.x = 127 end
+    if player.y > 127 then player.y = 127 end
 end
 
 function draw_game()
+    cls()
+    draw_stars()
+    draw_tank()
+end
+
+player = {}
+player.frame = 16
+player.x = 32
+player.y = 60
+
+function draw_tank()
+    spr(player.frame, player.x, player.y)
+    player.frame += 1
+    if player.frame > 18 then
+        player.frame = 16
+    end
+end
+
+movingStar = {{84, 9}, {67, 14}, {109, 19}, {27, 24}, {9, 29}, {96, 34}, {31, 39}, {45, 44}, {82, 49}, {19, 54}, {57, 59}}
+fastMovingStar = {{16, 10}, {125, 15}, {62, 20}, {79, 25}, {115, 30}, {104, 35}, {16, 40}, {117, 45}, {65, 50}, {98, 55}, {23, 60}}
+stillStar = {{84, 7}, {67, 12}, {109, 17}, {27, 22}, {9, 27}, {96, 32}, {31, 37}, {45, 42}, {82, 47}, {19, 52}, {57, 57}}
+
+function draw_stars()
+    for m=0,1 do
+        for i=1,11 do
+            fastMovingStar[i][1] -= 1
+            if fastMovingStar[i][1] < 1 then
+                fastMovingStar[i][1] = 128
+            end
+            pset(fastMovingStar[i][1], fastMovingStar[i][2] + m * 64, 7)
+
+            if animationframe % 2 == 0 then
+                movingStar[i][1] -= 1
+                if movingStar[i][1] < 1 then
+                    movingStar[i][1] = 128
+                end
+                pset(movingStar[i][1], movingStar[i][2] + m * 64, 7)
+            end
+
+            if animationframe % 3 == 0 then
+                stillStar[i][1] -= 1
+                if stillStar[i][1] < 1 then
+                    stillStar[i][1] = 128
+                end
+                pset(stillStar[i][1], stillStar[i][2] + m * 64, 7)
+            end
+        end
+    end
 end
 
 __gfx__
