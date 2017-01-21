@@ -1,17 +1,20 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
-game = {}
+game = {
+    animationframe=0,
+    score = 0
+}
 
-animationframe=0
-
-logoradius = 32
-logocentrex = 64
-logocentrey = 48
+logo = {
+    radius = 32,
+    x = 64,
+    y = 48,
+    frame = 0,
+    secondsanimating = 0
+}
 
 enemies = {}
-
-score = 0
 
 function _init()
     -- set pink as transparent
@@ -23,6 +26,10 @@ end
 
 function _update()
     game._update()
+    game.animationframe += 1
+    if game.animationframe == 30 then
+        game.animationframe = 0
+    end
 end
 
 function _draw()
@@ -30,49 +37,47 @@ function _draw()
 end
 
 function update_logo()
-    animationframe = animationframe+1
+    if game.animationframe == 29 then
+        logo.secondsanimating += 1
+    end
     
-    if animationframe == 90 or btnp(4) or btnp(5) then
+    if logo.secondsanimating == 3 or btnp(4) or btnp(5) then
         game._update = update_title
         game._draw = draw_title
     end
 end
 
 function draw_logo()
-    maxframe=60 -- 30fps * 2 seconds
-    logo_animation_frame = animationframe
-    if logo_animation_frame > maxframe then
-        logo_animation_frame = maxframe
+    if logo.secondsanimating < 2 then 
+        logo.frame = game.animationframe + logo.secondsanimating * 30
     end
 
     cls()
-    circfill(64,logocentrey, logoradius, 7)
-    circfill(64,logocentrey, logoradius-4, 0)
-    line(58, 28, logocentrex, logocentrey, 7)
-    line(59, 28, logocentrex+1, logocentrey, 7)
-    line(84, 40, logocentrex, logocentrey, 7)
-    line(84, 41, logocentrex, logocentrey+1, 7)
+    circfill(64,logo.y, logo.radius, 7)
+    circfill(64,logo.y, logo.radius-4, 0)
+    line(58, 28, logo.x, logo.y, 7)
+    line(59, 28, logo.x+1, logo.y, 7)
+    line(84, 40, logo.x, logo.y, 7)
+    line(84, 41, logo.x, logo.y+1, 7)
     -- todo little triangles at the 4 points
 
-    for i=logocentrex-logoradius,logocentrex+logoradius do
-        t=logo_animation_frame / 1.5
-        curve=7 - logo_animation_frame / 20
-        waveheight=16-logo_animation_frame/6
-        y=logocentrey+waveheight+sin((i+t)/70)*curve
-        for j=y, y+logoradius do
-            d = sqrt((i-logocentrex)^2+(j-logocentrey)^2)
-            if d < logoradius then
+    for i=logo.x-logo.radius,logo.x+logo.radius do
+        t=logo.frame / 1.5
+        curve=7 - logo.frame / 20
+        waveheight=16-logo.frame/6
+        y=logo.y+waveheight+sin((i+t)/70)*curve
+        for j=y, y+logo.radius do
+            d = sqrt((i-logo.x)^2+(j-logo.y)^2)
+            if d < logo.radius then
                 pset(i, j, 7)
             end
         end
     end
 
-    print("time sink labs", 37, 130-logo_animation_frame*0.6, 7)
+    print("time sink labs", 37, 130-logo.frame*0.6, 7)
 end
 
 function update_title()
-    animationframe = animationframe+1
-
     if btnp(4) or btnp(5) then
         game._update = update_game
         game._draw = draw_game
@@ -84,14 +89,14 @@ end
 function draw_title()
     cls()
     sspr(0, 64, 128, 128, 0, 24)
-    if animationframe % 10 != 0 then
+    if game.animationframe % 10 != 0 then
         print("press action", 40, 96, 7)
     end
 end
 
 function init_game()
-    animationframe = 0
-    score = 0
+    game.animationframe = 0
+    game.score = 0
     for i=1,3 do
         e = bat:new{ x = rnd(56) + 64,  y = rnd(120)}
         add(enemies, e)
@@ -99,11 +104,6 @@ function init_game()
 end
 
 function update_game()
-    animationframe += 1
-    if animationframe >= 30 then
-        animationframe = 0
-    end
-
     if btn(0) then player.x -= 1 end
     if btn(1) then player.x += 1 end
     if btn(2) then player.y -= 1 end
@@ -137,7 +137,7 @@ player.y = 60
 
 function player:draw()
     spr(self.frame, self.x, self.y)
-    if animationframe % 2 == 0 then
+    if game.animationframe % 2 == 0 then
         inc_frame(self, 16, 18)
     end
 end
@@ -165,7 +165,7 @@ end
 
 function bat:draw()
     spr(self.frame, self.x, self.y)
-    if animationframe % 5 == 0 then
+    if game.animationframe % 5 == 0 then
         inc_frame(self, 0, 1)
     end
 end
@@ -183,7 +183,7 @@ function draw_stars()
             end
             pset(fastmovingstar[i][1], fastmovingstar[i][2] + m * 64, 7)
 
-            if animationframe % 2 == 0 then
+            if game.animationframe % 2 == 0 then
                 movingstar[i][1] -= 1
                 if movingstar[i][1] < 1 then
                     movingstar[i][1] = 128
@@ -191,7 +191,7 @@ function draw_stars()
                 pset(movingstar[i][1], movingstar[i][2] + m * 64, 7)
             end
 
-            if animationframe % 3 == 0 then
+            if game.animationframe % 3 == 0 then
                 stillstar[i][1] -= 1
                 if stillstar[i][1] < 1 then
                     stillstar[i][1] = 128
