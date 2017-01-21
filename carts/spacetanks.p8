@@ -32,7 +32,7 @@ end
 function update_logo()
     animationframe = animationframe+1
     
-    if animationframe == 90 then
+    if animationframe == 90 or btnp(4) or btnp(5) then
         game._update = update_title
         game._draw = draw_title
     end
@@ -93,7 +93,7 @@ function init_game()
     animationframe = 0
     score = 0
     for i=1,3 do
-        e = bat:new{x = rnd(56) + 64, y = rnd(120)}
+        e = bat:new{ x = rnd(56) + 64,  y = rnd(120)}
         add(enemies, e)
     end
 end
@@ -137,7 +137,9 @@ player.y = 60
 
 function player:draw()
     spr(self.frame, self.x, self.y)
-    inc_frame(self, 16, 18)
+    if animationframe % 2 == 0 then
+        inc_frame(self, 16, 18)
+    end
 end
 
 enemypaths = {
@@ -152,9 +154,9 @@ enemypaths = {
 }
 
 bat = {}
-bat.frame = 1
+bat.frame = 0
 
-function bat:new()
+function bat:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
@@ -163,7 +165,9 @@ end
 
 function bat:draw()
     spr(self.frame, self.x, self.y)
-    inc_frame(self, 1, 2)
+    if animationframe % 5 == 0 then
+        inc_frame(self, 0, 1)
+    end
 end
 
 movingstar = {{84, 9}, {67, 14}, {109, 19}, {27, 24}, {9, 29}, {96, 34}, {31, 39}, {45, 44}, {82, 49}, {19, 54}, {57, 59}}
