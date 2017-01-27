@@ -3,6 +3,7 @@ version 8
 __lua__
 game = {
     animationframe=0,
+    seconds=0,
     score = 0
 }
 
@@ -19,7 +20,10 @@ function _update()
     game.animationframe += 1
     if game.animationframe == 30 then
         game.animationframe = 0
+        game.seconds += 1
     end
+
+    if game.seconds == 60 then game.seconds = 0 end
 end
 
 function _draw()
@@ -30,24 +34,19 @@ logo = {
     radius = 32,
     x = 64,
     y = 48,
-    frame = 0,
-    secondsanimating = 0
+    frame = 0
 }
 
 function update_logo()
-    if game.animationframe == 29 then
-        logo.secondsanimating += 1
-    end
-    
-    if logo.secondsanimating == 3 or btnp(4) or btnp(5) then
+    if game.seconds == 3 or btnp(4) or btnp(5) then
         game._update = update_title
         game._draw = draw_title
     end
 end
 
 function draw_logo()
-    if logo.secondsanimating < 2 then 
-        logo.frame = game.animationframe + logo.secondsanimating * 30
+    if game.seconds < 2 then 
+        logo.frame = game.animationframe + game.seconds * 30
     end
 
     cls()
@@ -92,6 +91,15 @@ function draw_title()
     end
 end
 
+function update_gameover()
+    update_title()
+end
+
+function draw_gameover()
+    cls()
+    print("you lose", 48, 58)
+end
+
 enemypaths = {
   {{-1, -1}, {-2, 0}, {-1, 1}, {-1, 0}},
   {{-1, -1}, {0, 0}, {-1, -1}, {-2, 0}},
@@ -105,17 +113,21 @@ enemypaths = {
 enemies = {}
 hitenemy = nil
 
-function init_game()
-    game.animationframe = 0
-    game.score = 0
-    for i=1,3 do
-        e = bat:new{ 
+function spawn_bat()
+     e = bat:new{ 
             x = rnd(56) + 64,  
             y = rnd(120),
             path = flr(rnd(7) + 1)
         }
         add(enemies, e)
-        
+end
+
+function init_game()
+    enemies = {}
+    game.animationframe = 0
+    game.score = 0
+    for i=1,3 do
+        spawn_bat()
     end
 end
 
@@ -155,7 +167,22 @@ function update_game()
                 end
             end
         end
+
+        if overlap(player, o) or overlap(o, player) then
+            game._update = update_gameover
+            game._draw = draw_gameover
+        end
+
+        if o.hitframe >= 5 then
+            del(enemies, o)
+        end
     end)
+
+    if game.animationframe == 0 and 
+       game.seconds % 7 == 0 and 
+       count(enemies) < 10 then 
+        spawn_bat() 
+    end
 end
 
 function draw_game()
@@ -173,12 +200,31 @@ function inc_frame(o, min, max)
     end
 end
 
-player = {}
-player.frame = 16
-player.x = 32
-player.y = 60
-player.state = "move"
-player.shootframe = 9
+function overlap(one, two)
+    return in_box(one.x + one.bounding_x_left, one.y + one.bounding_y_left, two) or
+           in_box(one.x + one.bounding_x_left, one.y + one.bounding_y_right, two) or
+           in_box(one.x + one.bounding_x_right, one.y + one.bounding_y_left, two) or
+           in_box(one.x + one.bounding_x_right, one.y + one.bounding_y_right, two)
+end
+
+function in_box(x, y, o)
+    return x > o.x + o.bounding_x_left and x < o.x + o.bounding_x_right and
+        y > o.y + o.bounding_y_left and y < o.y + o.bounding_y_right
+end
+
+player = {
+    frame = 16,
+    state = "move",
+    shootframe = 9,
+
+    x = 32,
+    y = 60,
+
+    bounding_x_left = 0,
+    bounding_y_left = 0,
+    bounding_x_right = 6,
+    bounding_y_right = 6
+}
 
 function player:draw()
     spr(self.frame, self.x, self.y)
@@ -199,7 +245,13 @@ bat = {
     frame = 0,
     pathstep = 1,
     path = 1,
-    hit = false
+    hit = false,
+    hitframe = 0,
+
+    bounding_x_left = 0,
+    bounding_y_left = 2,
+    bounding_x_right = 6,
+    bounding_y_right = 4
 }
 
 function bat:new(o)
@@ -210,7 +262,7 @@ function bat:new(o)
 end
 
 function bat:move()
-    if game.animationframe % 2 then
+    if game.animationframe % 2 and self.hit == false then
         self.x += enemypaths[self.path][self.pathstep][1]
         self.y += enemypaths[self.path][self.pathstep][2]
         self.pathstep += 1
@@ -230,7 +282,12 @@ function bat:draw()
     end
 
     if self.hit == true then
-        rect(self.x, self.y, self.x + 7, self.y + 7, 8)
+        if self.hitframe < 5 then
+            sspr(self.hitframe * 16, 48, 16, 16, self.x - 4, self.y - 4)
+            if game.animationframe % 5 == 0 then
+                self.hitframe += 1
+            end
+        end
     end
 end
 
@@ -317,17 +374,17 @@ eeeeeeeeeeee7777777777eeeeeeeeeeeeeeeeeeeeee7707770777eeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeee77777077eeeeeeeeeeeeeeeeeeeeeeee70777777eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee7eeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeeeeee7eeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeee77eeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee77eeeeeeeeeeeeeee7ee7eeeeeeeeeeeeeee7eeeeeeeeee7eeee7eeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeee7e77e7e7eeeeeeee777e7ee7eeeeeeee77ee7ee7eeeee7e7eeeeeeee77eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee7eeeeeeeeee777777777eeeeee7eee77777777eeee7ee7eeeee777eeeeeeeeeeeee777eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeee7eeeeeeeeeeee7777777eeeeeeeeeeee777e7eeeeeeeeeeeeeeeeeeeeeee7eeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee77eeeeeeeeeee7777e7eeeeeeee7eee777eeeeeeeee777ee7eeeeeeeeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeee7ee7eeeeeeeeeee7777eeeeeeeeeeeeee777eeeeeeeeee7eeee7eeeeeeeee7eeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeee7eeeeeeeeeee7e7e7e7eeeeeeeeeee7777eeeeeeeeeeee7e77e7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeee7eeeeeeeeeeeeeeee7ee7eeeeeeeee7eee7e7eeeeeeeee7ee7ee7eeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee6eeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeee6eeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeee88eeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee66eeeeeeeeeeeeeee6ee6eeeeeeeeeeeeeee6eeeeeeeeee6eeee8eeeeeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeee6e66e6e6eeeeeeee666e6ee6eeeeeeee88ee6ee8eeeee6e8eeeeeeee88eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee6eeeeeeeeee666666666eeeeee6eee68888888eeee6ee8eeeee888eeeeeeeeeeeee888eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeee6eeeeeeeeeeee6666666eeeeeeeeeeee888e8eeeeeeeeeeeeeeeeeeeeeee6eeeeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee88eeeeeeeeeee8888e8eeeeeeee6eee888eeeeeeeee888ee8eeeeeeeeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeee8ee8eeeeeeeeeee8888eeeeeeeeeeeeee888eeeeeeeeee8eeee8eeeeeeeee6eeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeee8eeeeeeeeeee8e8e8e8eeeeeeeeeee6888eeeeeeeeeeee6e88e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeee8eeeeeeeeeeeeeeee8ee8eeeeeeeee6eee8e6eeeeeeeee6ee8ee8eeeeeeeeeeeee6eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
