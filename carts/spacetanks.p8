@@ -6,16 +6,6 @@ game = {
     score = 0
 }
 
-logo = {
-    radius = 32,
-    x = 64,
-    y = 48,
-    frame = 0,
-    secondsanimating = 0
-}
-
-enemies = {}
-
 function _init()
     -- set pink as transparent
     palt(14, true)
@@ -35,6 +25,14 @@ end
 function _draw()
     game._draw()
 end
+
+logo = {
+    radius = 32,
+    x = 64,
+    y = 48,
+    frame = 0,
+    secondsanimating = 0
+}
 
 function update_logo()
     if game.animationframe == 29 then
@@ -94,12 +92,29 @@ function draw_title()
     end
 end
 
+enemypaths = {
+  {{-1, -1}, {-2, 0}, {-1, 1}, {-1, 0}},
+  {{-1, -1}, {0, 0}, {-1, -1}, {-2, 0}},
+  {{0, 2}, {-1, 1}, {-1, 2}, {-1, 0}},
+  {{-1, 0}, {0, 0}, {-3, 0}, {0, 0}},
+  {{-1, -2}, {0, -1}, {-1, -1}, {-2, 0}},
+  {{0, -2}, {-1, 0}, {0, -2}, {-2, 0}},
+  {{-1, 1}, {-1, 1}, {-1, 1}, {-1, 1}},
+  {{1, -1}, {2, 0}, {3, 0}, {1, 1}},
+}
+enemies = {}
+
 function init_game()
     game.animationframe = 0
     game.score = 0
     for i=1,3 do
-        e = bat:new{ x = rnd(56) + 64,  y = rnd(120)}
+        e = bat:new{ 
+            x = rnd(56) + 64,  
+            y = rnd(120),
+            path = flr(rnd(7) + 1)
+        }
         add(enemies, e)
+        
     end
 end
 
@@ -113,6 +128,8 @@ function update_game()
     if player.y < 1 then player.y = 1 end
     if player.x > 127 then player.x = 127 end
     if player.y > 127 then player.y = 127 end
+
+    foreach(enemies, function(o) o:move() end)
 end
 
 function draw_game()
@@ -142,25 +159,34 @@ function player:draw()
     end
 end
 
-enemypaths = {
-  {{-1, -1}, {-2, 0}, {-1, 1}, {-1, 0}},
-  {{-1, -1}, {0, 0}, {-1, -1}, {-2, 0}},
-  {{0, 2}, {-1, 1}, {-1, 2}, {-1, 0}},
-  {{-1, 0}, {0, 0}, {-3, 0}, {0, 0}},
-  {{-1, -2}, {0, -1}, {-1, -1}, {-2, 0}},
-  {{0, -2}, {-1, 0}, {0, -2}, {-2, 0}},
-  {{-1, 1}, {-1, 1}, {-1, 1}, {-1, 1}},
-  {{1, -1}, {2, 0}, {3, 0}, {1, 1}},
+bat = {
+    frame = 0,
+    pathstep = 1,
+    path = 1
 }
-
-bat = {}
-bat.frame = 0
 
 function bat:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
     return o
+end
+
+function bat:move()
+    if game.animationframe % 2 then
+        self.x += enemypaths[self.path][self.pathstep][1]
+        self.y += enemypaths[self.path][self.pathstep][2]
+        self.pathstep += 1
+
+        if self.pathstep > 4 then self.pathstep = 1 end
+        -- self.x += self.path[self.pathstep][1]
+        -- self.y += self.path[self.pathstep][2]
+        -- self.pathstep += 1
+
+        if self.x < 0 then self.x = 127 end
+        if self.y < 0 then self.y = 127 end
+        if self.y > 127 then self.y = 0 end
+    end
 end
 
 function bat:draw()
@@ -203,13 +229,13 @@ function draw_stars()
 end
 
 __gfx__
-eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeee7eeeeeeeee7eeee7e7eee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eee7eeee7ee7ee7eeeeeeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeee7e7eeeeeee7e7eee7e7ee7e7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-e77e77eee77e77eeeeeeeeeeeee77eeeee77eeeeeee77eeeee77eeeeeee77eeeee77eeee7e7eeeeeee7e7eee7e7ee7e7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-7e7e7e7eeeeeeeeeeeeeeeeeeee7e7eee7e7eeeeeee7e7eee7e7eeeeeee7e7eee7e7eeee7e7eeeeeee7e7eee7e7ee7e7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeeeee7ee7e7e7ee7eeeee7ee7e7e7ee7eeeee7ee7e7e7ee7eeee7eeeeeeeee7eeee7e7eee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
-eeeeeeeeeeeeeeeeeeeeeeeeeeee7e7e7e7eeeeeeeee7e7e7e7eeeeeeeee7e7e7e7eeeeeeeeeeeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeee8eeeeeeeee8eeee8e8eee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eee7eeee7ee7ee7eeeeeeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeee8e8eeeeeee8e8eee8e8ee8e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+e77e77eee77e77eeeeeeeeeeeee77eeeee77eeeeeee77eeeee77eeeeeee77eeeee77eeee8e8eeeeeee8e8eee8e8ee8e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+7e7e7e7eeeeeeeeeeeeeeeeeeee7e7eee7e7eeeeeee7e7eee7e7eeeeeee7e7eee7e7eeee8e8eeeeeee8e8eee8e8ee8e8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeee7ee7e7e7ee7eeeee7ee7e7e7ee7eeeee7ee7e7e7ee7eeee8eeeeeeeee8eeee8e8eee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
+eeeeeeeeeeeeeeeeeeeeeeeeeeee7e7e7e7eeeeeeeee7e7e7e7eeeeeeeee7e7e7e7eeeeeeeeeeeeeeeeeeeeee8eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 eeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 7707707e7077077e0770777eeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeee7eeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
 e70007eee70007eee70007eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee7eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee
