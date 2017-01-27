@@ -103,6 +103,7 @@ enemypaths = {
   {{1, -1}, {2, 0}, {3, 0}, {1, 1}},
 }
 enemies = {}
+hitenemy = nil
 
 function init_game()
     game.animationframe = 0
@@ -123,13 +124,38 @@ function update_game()
     if btn(1) then player.x += 1 end
     if btn(2) then player.y -= 1 end
     if btn(3) then player.y += 1 end
+
+    if btnp(4) and player.state == "move" then
+        player.state = "shoot"
+    end
+
+    if player.state == "shoot" and player.shootframe > 11 then
+        player.state = "move"
+        player.shootframe = 9
+        hitenemy = nil
+    end
     
     if player.x < 1 then player.x = 1 end
     if player.y < 1 then player.y = 1 end
     if player.x > 127 then player.x = 127 end
     if player.y > 127 then player.y = 127 end
 
-    foreach(enemies, function(o) o:move() end)
+    foreach(enemies, function(o) 
+        o:move()
+        if player.state == "shoot" then
+            lasery = player.y + 3
+            if o.x > player.x and lasery >= o.y + 3 and lasery <= o.y + 4 then
+                if hitenemy == nil then 
+                    hitenemy = o
+                    o.hit = true
+                end
+                if hitenemy.x > o.x then
+                    hitenemy.hit = false
+                    hitenemy = o
+                end
+            end
+        end
+    end)
 end
 
 function draw_game()
@@ -151,18 +177,29 @@ player = {}
 player.frame = 16
 player.x = 32
 player.y = 60
+player.state = "move"
+player.shootframe = 9
 
 function player:draw()
     spr(self.frame, self.x, self.y)
     if game.animationframe % 2 == 0 then
         inc_frame(self, 16, 18)
     end
+
+    if self.state == "shoot" then
+        spr(self.shootframe, self.x + 8, self.y)
+        laserx = 127
+        if hitenemy != nil then laserx = hitenemy.x + 2 end
+        line(self.x + 8, self.y + 3, 127, self.y + 3, 8)
+        self.shootframe += 1
+    end
 end
 
 bat = {
     frame = 0,
     pathstep = 1,
-    path = 1
+    path = 1,
+    hit = false
 }
 
 function bat:new(o)
@@ -179,9 +216,6 @@ function bat:move()
         self.pathstep += 1
 
         if self.pathstep > 4 then self.pathstep = 1 end
-        -- self.x += self.path[self.pathstep][1]
-        -- self.y += self.path[self.pathstep][2]
-        -- self.pathstep += 1
 
         if self.x < 0 then self.x = 127 end
         if self.y < 0 then self.y = 127 end
@@ -193,6 +227,10 @@ function bat:draw()
     spr(self.frame, self.x, self.y)
     if game.animationframe % 5 == 0 then
         inc_frame(self, 0, 1)
+    end
+
+    if self.hit == true then
+        rect(self.x, self.y, self.x + 7, self.y + 7, 8)
     end
 end
 
