@@ -136,6 +136,7 @@ function init_game()
     enemies = {}
     game.animationframe = 0
     game.score = 0
+    game.cooldown = 0
     for i=1,3 do
         spawn_bat()
     end
@@ -165,6 +166,7 @@ function update_game()
 
     foreach(enemies, function(o) 
         o:move()
+
         if player.state == "shoot" then
             lasery = player.y + 3
             if o.x > player.x and lasery >= o.y + 3 and lasery <= o.y + 4 then
@@ -175,24 +177,14 @@ function update_game()
                 if hitenemy.x > o.x then
                     hitenemy.hit = false
                     hitenemy = o
-                end
-                
+                end        
             end
         end
 
         if overlap(player, o) or overlap(o, player) then
             init_gameover()
         end
-
-        if o.hitframe >= 5 then
-            del(enemies, o)
-            game.score += 1
-        end
     end)
-
-    if hitenemy != nil and hitenemy.hitframe == 1 then
-        sfx(1)
-    end
 
     if game.animationframe == 0 and 
        game.seconds % 7 == 0 and 
@@ -269,7 +261,9 @@ bat = {
     bounding_x_left = 0,
     bounding_y_left = 2,
     bounding_x_right = 6,
-    bounding_y_right = 4
+    bounding_y_right = 4,
+
+    width = 8
 }
 
 function bat:new(o)
@@ -291,6 +285,11 @@ function bat:move()
         if self.y < 0 then self.y = 127 end
         if self.y > 127 then self.y = 0 end
     end
+
+    if self.hitframe >= 5 then
+        del(enemies, self)
+        game.score += 1
+    end
 end
 
 function bat:draw()
@@ -300,8 +299,9 @@ function bat:draw()
     end
 
     if self.hit == true then
+        if self.hitframe == 0 then sfx(1) end
         if self.hitframe < 5 then
-            sspr(self.hitframe * 16, 48, 16, 16, self.x - 4, self.y - 4)
+            sspr(self.hitframe * 16, 48, 16, 16, self.x - self.width / 2, self.y - self.width / 2)
             if game.animationframe % 5 == 0 then
                 self.hitframe += 1
             end
