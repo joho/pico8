@@ -124,12 +124,88 @@ enemies = {}
 hitenemy = nil
 
 function spawn_bat()
-     e = bat:new{ 
-            x = rnd(56) + 64,  
-            y = rnd(120),
-            path = flr(rnd(7) + 1)
-        }
-        add(enemies, e)
+     e = enemy:new{ 
+        x = rnd(56) + 64,  
+        y = rnd(120),
+        path = flr(rnd(7) + 1),
+
+        bounding_x_left = 0,
+        bounding_y_left = 2,
+        bounding_x_right = 6,
+        bounding_y_right = 4,
+
+        spritex = 0,
+        spritey = 0,
+
+        width = 8,
+
+        frame_count = 2,
+
+        health = 1
+    }
+    add(enemies, e)
+end
+
+function spawn_mega_bat()
+    e = enemy:new{
+        x = rnd(56) + 64,  
+        y = rnd(120),
+        path = flr(rnd(7) + 1),
+
+        spritex = 24,
+        spritey = 0,
+        width = 16,
+
+        bounding_x_left = 3,
+        bounding_y_left = 1,
+        bounding_x_right = 13,
+        bounding_y_right = 11,
+
+        frame_count = 3,
+
+        health = 3
+    }
+    add(enemies, e)
+end
+
+function spawn_mega_dracula()
+    e = enemy:new{
+        x = rnd(56) + 64,  
+        y = rnd(120),
+        path = flr(rnd(7) + 1),
+
+        spritex = 0,
+        spritey = 16,
+        width = 32,
+
+        bounding_x_left = 0,
+        bounding_y_left = 2,
+        bounding_x_right = 29,
+        bounding_y_right = 32,
+
+        frame_count = 2,
+
+        health = 10
+    }
+    add(enemies, e)
+end
+
+function spawn_next_enemy()
+    if game.animationframe == 0 and game.seconds % 3 == 0 then
+        if game.score > 0 and game.score % 30 == 0 then
+            enemies = {}
+            spawn_mega_dracula()
+            return
+        end
+        
+        if count(enemies) < 10 then
+           if game.score % 5 == 0 then
+                spawn_mega_bat()
+            else
+                spawn_bat()
+            end 
+        end
+    end
 end
 
 function init_game()
@@ -169,13 +245,13 @@ function update_game()
 
         if player.state == "shoot" then
             lasery = player.y + 3
-            if o.x > player.x and lasery >= o.y + 3 and lasery <= o.y + 4 then
+            if o.x > player.x and lasery >= o.y + o.bounding_y_left and lasery <= o.y + o.bounding_y_right then
                 if hitenemy == nil then 
                     hitenemy = o
-                    o.hit = true
+                    o.hit = lasery
                 end
                 if hitenemy.x > o.x then
-                    hitenemy.hit = false
+                    hitenemy.hit = nil
                     hitenemy = o
                 end        
             end
@@ -186,11 +262,7 @@ function update_game()
         end
     end)
 
-    if game.animationframe == 0 and 
-       game.seconds % 7 == 0 and 
-       count(enemies) < 10 then 
-        spawn_bat()
-    end
+    spawn_next_enemy()
 end
 
 function draw_game()
@@ -251,30 +323,23 @@ function player:draw()
     end
 end
 
-bat = {
+enemy = {
     frame = 0,
     pathstep = 1,
     path = 1,
-    hit = false,
-    hitframe = 0,
-
-    bounding_x_left = 0,
-    bounding_y_left = 2,
-    bounding_x_right = 6,
-    bounding_y_right = 4,
-
-    width = 8
+    hit = nil,
+    hitframe = 0
 }
 
-function bat:new(o)
+function enemy:new(o)
     o = o or {}
     setmetatable(o, self)
     self.__index = self
     return o
 end
 
-function bat:move()
-    if game.animationframe % 2 and self.hit == false then
+function enemy:move()
+    if game.animationframe % 2 and self.hit == nil then
         self.x += enemypaths[self.path][self.pathstep][1]
         self.y += enemypaths[self.path][self.pathstep][2]
         self.pathstep += 1
@@ -287,21 +352,29 @@ function bat:move()
     end
 
     if self.hitframe >= 5 then
-        del(enemies, self)
+        self.health -= 1
+        self.hit = nil
+        self.hitframe = 0
+        
+        if self.health <= 0 then
+            del(enemies, self)
+        end
+        
         game.score += 1
     end
 end
 
-function bat:draw()
-    spr(self.frame, self.x, self.y)
+function enemy:draw()
+    sspr(self.frame * self.width + self.spritex, self.spritey, self.width, self.width, self.x, self.y)
+    -- rect(self.x, self.y, self.x + self.width, self.y + self.width, 3)
     if game.animationframe % 5 == 0 then
-        inc_frame(self, 0, 1)
+        inc_frame(self, 0, self.frame_count - 1)
     end
 
-    if self.hit == true then
+    if self.hit != nil then
         if self.hitframe == 0 then sfx(1) end
         if self.hitframe < 5 then
-            sspr(self.hitframe * 16, 48, 16, 16, self.x - self.width / 2, self.y - self.width / 2)
+            sspr(self.hitframe * 16, 48, 16, 16, self.x - 4, self.hit - 8)
             if game.animationframe % 5 == 0 then
                 self.hitframe += 1
             end
