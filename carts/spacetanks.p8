@@ -163,7 +163,7 @@ function spawn_mega_bat()
 
         frame_count = 3,
 
-        health = 3
+        health = 2
     }
     add(enemies, e)
 end
