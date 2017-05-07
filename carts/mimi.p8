@@ -25,7 +25,6 @@ function updatedog(dog)
         if player.state == horsestates.kickup then
             if player.frame > 2 and player.frame < 6 then
                 offset = player.x - (dog.x + 4)
-                print(offset, 0, 16)
                 if not player.flipx then
                     if offset > 8 and offset < 16 then
                         dog.state = puppystates.wrecked
@@ -35,6 +34,7 @@ function updatedog(dog)
                         dog.state = puppystates.wrecked
                     end
                 end
+                dog.angle = offset
             end
         end
 
@@ -61,6 +61,13 @@ function updatedog(dog)
     
     if dog.state == puppystates.wrecked then
         dog.y -= 1
+        xoffset = flr(abs(dog.angle) / 4)
+        if dog.moveright then
+            dog.x -= xoffset
+        else
+            dog.x += xoffset
+        end
+
         if dog.y < 0 then
             del(dogs, dog)
             player.score += 5
