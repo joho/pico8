@@ -40,9 +40,9 @@ function updatedog(dog)
 
         if everynframes(3) then
             if dog.moveright then
-                dog.x += 1
+                dog.x += dog.speed
             else
-                dog.x -= 1
+                dog.x -= dog.speed
             end
         end
 
@@ -80,7 +80,8 @@ function spawndog()
         moveright = moveright,
         x = x,
         y = 104,
-        frame = 0
+        frame = 0,
+        speed = flr(rnd(3)) + 1,
     }
     add(dogs, dog)
 end
