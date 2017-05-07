@@ -1,12 +1,72 @@
 pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
-
-states = {
+horsestates = {
     idle = 0,
     kickup = 1,
     kickdown = 2,
 }
+
+puppystates = {
+    frolic = 0,
+    wrecked = 1,
+}
+
+function everynframes(n)
+    return frame % n == 0
+end
+
+function everynseconds(n)
+    return frame == 0 and seconds % n == 0
+end
+
+function updatedog(dog)
+    if dog.state == puppystates.frolic then
+        if player.state == horsestates.kickup then
+            if player.frame > 2 and player.frame < 6 then
+            end
+        end
+
+        if everynframes(3) then
+            if dog.moveright then
+                dog.x += 1
+            else
+                dog.x -= 1
+            end
+        end
+
+        if everynframes(2) then
+            dog.frame += 1
+            if dog.frame == 2 then
+                dog.frame = 0
+            end
+        end
+
+        if dog.x > 128 or dog.x < 0 then
+            del(dogs, dog)
+            player.score -= 1
+        end
+    end
+    
+    if dog.state == puppystates.wrecked then
+    end
+end
+
+function spawndog()
+    moveright = flr(rnd(2)) == 1
+    if moveright then
+        x = 0
+    else
+        x = 124
+    end
+    dog = {
+        state = puppystates.frolic,
+        moveright = moveright,
+        x = x,
+        frame = 0
+    }
+    add(dogs, dog)
+end
 
 function _init()
     cls()
@@ -15,39 +75,47 @@ function _init()
 
     -- player properties to reset on restart
     frame = 0
+    seconds = 0
 
     player = {
         width = 32,
         height = 24,
         x = 64,
         flipx = false,
-        state = states.idle,
-        frame = 0
+        state = horsestates.idle,
+        frame = 0,
+        score = 0,
     }
+
+    dogs = {}
 end
 
 function _update()
     frame += 1
     if frame == 30 then
         frame = 0
+        seconds += 1
+        if seconds == 10 then
+            seconds = 0
+        end
     end
 
-    if player.state == states.kickup then
+    if player.state == horsestates.kickup then
         player.frame += 1
         if player.frame == 9 then
-            player.state = states.kickdown
+            player.state = horsestates.kickdown
         end
     end
 
-    if player.state == states.kickdown then
+    if player.state == horsestates.kickdown then
         player.frame -= 1
         if player.frame == 0 then
-            player.state = states.idle
+            player.state = horsestates.idle
         end
     end
 
-    if player.state == states.idle then
-        if frame % 2 == 0 then
+    if player.state == horsestates.idle then
+        if everynframes(2) then
             if btn(1) then
                 player.flipx = false
                 player.x += 1
@@ -61,26 +129,49 @@ function _update()
 
         if btnp(4) then
             player.frame = 0
-            player.state = states.kickup
+            player.state = horsestates.kickup
         end
     end
 
-    
+    foreach(dogs, updatedog)
+
+    if everynseconds(2) then
+        spawndog()
+    end
 end
 
-function _draw()
-    map()
-
+function drawhorse()
     horsespritex = flr(player.frame / 3) * player.width
-    print(player.frame, 32, 0)
 
     sspr(horsespritex, 0, 
         player.width, player.height, 
         player.x - (player.width / 2), 90 + (player.x % 2), 
         player.width, player.height,
         player.flipx, false)
+end
 
-    print(frame, 0, 0)
+function drawdog(dog)
+    if dog.state == puppystates.frolic then
+        dogsprite = 48 + dog.frame
+    end
+
+    if dog.state == puppystates.wrecked then
+        dogsprite = 50
+    end
+    spr(dogsprite, dog.x, 104, 1, 1, not dog.moveright)
+end
+
+function _draw()
+    map()
+
+    drawhorse()
+
+    foreach(dogs, drawdog)
+
+    print(seconds, 0, 0)
+    print(frame, 8, 0)
+
+    print(player.score, 100, 0)
 end
 
 __gfx__
@@ -109,13 +200,13 @@ aaaaaaaaa0aa0aaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaa
 aaaaaaaaaaaa0aaaaaaaa0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0aaaaaaaaaa00000000000000000000000000000000
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaaaaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaa4aa4aaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaa4744aaaa474aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4444444444444444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+a44444aaa44444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+a44aa44aa44a4a4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4a4aa4a4a4a44a4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
