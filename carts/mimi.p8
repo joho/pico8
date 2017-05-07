@@ -2,8 +2,10 @@ pico-8 cartridge // http://www.pico-8.com
 version 8
 __lua__
 
-player = {
-    size = 32,
+states = {
+    idle = 0,
+    kickup = 1,
+    kickdown = 2,
 }
 
 function _init()
@@ -14,9 +16,14 @@ function _init()
     -- player properties to reset on restart
     frame = 0
 
-    player.x = 64
-    player.flipx = false
-    player.state = "idle"
+    player = {
+        width = 32,
+        height = 24,
+        x = 64,
+        flipx = false,
+        state = states.idle,
+        frame = 0
+    }
 end
 
 function _update()
@@ -25,25 +32,52 @@ function _update()
         frame = 0
     end
 
-    if frame % 2 == 0 then
-        if btn(1) then
-            player.flipx = false
-            player.x += 1
-        end
-
-        if btn(0) then
-            player.flipx = true
-            player.x -= 1
+    if player.state == states.kickup then
+        player.frame += 1
+        if player.frame == 9 then
+            player.state = states.kickdown
         end
     end
+
+    if player.state == states.kickdown then
+        player.frame -= 1
+        if player.frame == 0 then
+            player.state = states.idle
+        end
+    end
+
+    if player.state == states.idle then
+        if frame % 2 == 0 then
+            if btn(1) then
+                player.flipx = false
+                player.x += 1
+            end
+
+            if btn(0) then
+                player.flipx = true
+                player.x -= 1
+            end
+        end
+
+        if btnp(4) then
+            player.frame = 0
+            player.state = states.kickup
+        end
+    end
+
+    
 end
 
 function _draw()
     map()
-    sspr(0, 0, 
-        player.size, player.size, 
-        player.x - (player.size / 2), 90 + (player.x % 2), 
-        player.size, player.size,
+
+    horsespritex = flr(player.frame / 3) * player.width
+    print(player.frame, 32, 0)
+
+    sspr(horsespritex, 0, 
+        player.width, player.height, 
+        player.x - (player.width / 2), 90 + (player.x % 2), 
+        player.width, player.height,
         player.flipx, false)
 
     print(frame, 0, 0)
