@@ -24,6 +24,17 @@ function updatedog(dog)
     if dog.state == puppystates.frolic then
         if player.state == horsestates.kickup then
             if player.frame > 2 and player.frame < 6 then
+                offset = player.x - (dog.x + 4)
+                print(offset, 0, 16)
+                if not player.flipx then
+                    if offset > 8 and offset < 16 then
+                        dog.state = puppystates.wrecked
+                    end
+                else
+                    if offset < -8 and offset > -16 then
+                        dog.state = puppystates.wrecked
+                    end
+                end
             end
         end
 
@@ -49,6 +60,11 @@ function updatedog(dog)
     end
     
     if dog.state == puppystates.wrecked then
+        dog.y -= 1
+        if dog.y < 0 then
+            del(dogs, dog)
+            player.score += 5
+        end
     end
 end
 
@@ -63,6 +79,7 @@ function spawndog()
         state = puppystates.frolic,
         moveright = moveright,
         x = x,
+        y = 104,
         frame = 0
     }
     add(dogs, dog)
@@ -158,7 +175,7 @@ function drawdog(dog)
     if dog.state == puppystates.wrecked then
         dogsprite = 50
     end
-    spr(dogsprite, dog.x, 104, 1, 1, not dog.moveright)
+    spr(dogsprite, dog.x, dog.y, 1, 1, not dog.moveright)
 end
 
 function _draw()
@@ -199,14 +216,14 @@ aaaaaaaaa0aa0aaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaa
 aaaaaaaaa0aa0aaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaaaa0aa0aaaaaaaaaaaaaaaaaaaaaaaaaaaa0aa0aaaaaaaaaa00000000000000000000000000000000
 aaaaaaaaaaaa0aaaaaaaa0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa0aaaaaaaaaa00000000000000000000000000000000
 aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-4aaaaaaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-4aaaa4aa4aaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-4aaaa4744aaaa474aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-4444444444444444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-a44444aaa44444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-a44aa44aa44a4a4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
-4a4aa4a4a4a44a4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+aaaaaaaaaaaaaaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaaaaaa4aaaaaa4aaaaaa4aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaa4aa4aaaa4aa4a4aaa44aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4aaaa4744aaaa474a4a44a47aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4444444444444444a4a4a444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+a44444aaa44444aaa444444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+a44aa44aa44a4a4aaa44444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
+4a4aa4a4a4a44a4aaa4444aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa00000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
